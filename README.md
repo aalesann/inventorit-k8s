@@ -225,9 +225,16 @@ kind delete cluster --name inventorit
 
 Las credenciales están en `manifests/config/postgres-secret.yaml`:
 
-- Usuario: `inventorit_user`
+**Base de datos:**
+- Usuario: `postgres`
 - Contraseña: `inventorit_pass_2024`
 - Base de datos: `inventorit_db`
+
+**Usuario admin por defecto:**
+- Usuario: `admin`
+- Contraseña: `Adm1n_Secur3!2025`
+
+> ⚠️ Cambiar la contraseña del admin después del primer login en producción.
 
 ## Componentes
 
@@ -235,20 +242,27 @@ Las credenciales están en `manifests/config/postgres-secret.yaml`:
 - Imagen: `alesandocker/inventorit-db:1.0.0`
 - Almacenamiento: 1Gi PVC
 - Puerto: 5432 (interno)
+- Usuario: postgres
 
 ### Backend
 - Imagen: `alesandocker/inventorit-backend:1.0.0`
 - Puerto: 3000 (interno)
 - Health: `/health`
+- WebSocket: Socket.IO en `/socket.io/`
 
 ### Frontend
 - Imagen: `alesandocker/inventorit-frontend:1.0.0`
-- Puerto: 80 (interno)
+- Puerto: 8080 (interno)
+- React SPA
 
 ### NGINX
 - Imagen: `nginx:1.28.0-alpine`
 - Puerto: 80 → NodePort 30080 → Host 8080
-- Rutas: `/` (frontend), `/api` (backend)
+- Rutas: 
+  - `/` → frontend (8080)
+  - `/api/` → backend (3000)
+  - `/socket.io/` → backend WebSocket
+  - `/uploads/` → backend uploads
 
 ## Notas
 - Proyecto 100% Kubernetes

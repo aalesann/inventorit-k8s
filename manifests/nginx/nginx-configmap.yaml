@@ -10,6 +10,17 @@ data:
     }
 
     http {
+        # Configuración de tipos MIME
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        # Optimizaciones
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+
         upstream frontend {
             server frontend-service:80;
         }
@@ -19,29 +30,93 @@ data:
         }
 
         server {
-            listen 80;
-            server_name localhost;
-
-            location / {
-                proxy_pass http://frontend;
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-
-            location /api {
+            listen 8080;
+            server_name _;
+            
+            # Tamaño máximo de carga
+            client_max_body_size 100M;
+            
+            # Proxy para el backend API
+            location /api/ {
                 proxy_pass http://backend;
+                proxy_http_version 1.1;
+                
+                # Headers para preservar información del cliente
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $remote_addr;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Forwarded-Port $server_port;
+                
+                # IMPORTANT: Pass cookies to backend
+                proxy_set_header Cookie $http_cookie;
+                proxy_pass_header Set-Cookie;
+                
+                # Soporte para WebSocket
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_cache_bypass $http_upgrade;
+                
+                # Timeouts
+                proxy_connect_timeout 60s;
+                proxy_send_timeout 60s;
+                proxy_read_timeout 60s;
+            }
+
+            # Proxy para Socket.IO
+            location /socket.io/ {
+                proxy_pass http://backend;
+                proxy_http_version 1.1;
+                
+                # Headers para WebSocket
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # Timeouts para WebSocket
+                proxy_connect_timeout 7d;
+                proxy_send_timeout 7d;
+                proxy_read_timeout 7d;
+            }
+
+            # Serve uploaded files (avatars, etc.)
+            location /uploads/ {
+                proxy_pass http://backend;
+                proxy_http_version 1.1;
+                
+                # Headers
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
             }
 
+            # Health check
             location /health {
                 proxy_pass http://backend;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
+            }
+
+            # Proxy para el frontend
+            location / {
+                proxy_pass http://frontend;
+                proxy_http_version 1.1;
+                
+                # Headers
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                
+                # Soporte para WebSocket (para HMR en desarrollo)
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_cache_bypass $http_upgrade;
             }
         }
     }
