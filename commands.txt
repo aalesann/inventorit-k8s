@@ -1,58 +1,72 @@
-# Comandos para desplegar InventorIT en Kubernetes con kind
+# ========================================
+# COMANDOS PARA DESPLEGAR INVENTORIT EN KUBERNETES
+# ========================================
 
-# 1. Crear el cluster de Kubernetes con kind
+# 1. CREAR CLUSTER KIND
 kind create cluster --config kind-config.yaml --name inventorit
 
-# 2. Verificar que el cluster este corriendo
+# 2. VERIFICAR CLUSTER
 kubectl cluster-info --context kind-inventorit
 
-# 3. Aplicar los manifiestos en orden
+# 3. CREAR NAMESPACE
+kubectl apply -f manifests/namespace.yaml
 
-# Primero: Configuracion (Secrets y ConfigMaps)
+# 4. DESPLEGAR CONFIGURACION (Secrets y ConfigMaps)
 kubectl apply -f manifests/config/
 
-# Segundo: Base de datos (PVC, Deployment y Service)
+# 5. DESPLEGAR BASE DE DATOS
 kubectl apply -f manifests/db/
 
-# Esperar a que la base de datos este lista
-kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s
+# 6. ESPERAR A QUE POSTGRES ESTE LISTO
+kubectl rollout status deployment/postgres -n inventorit
 
-# Tercero: Backend (Deployment y Service)
+# 7. DESPLEGAR BACKEND
 kubectl apply -f manifests/backend/
 
-# Esperar a que el backend este listo
-kubectl wait --for=condition=ready pod -l app=backend --timeout=120s
+# 8. ESPERAR A QUE BACKEND ESTE LISTO
+kubectl rollout status deployment/backend -n inventorit
 
-# Cuarto: Frontend (Deployment y Service)
+# 9. DESPLEGAR FRONTEND
 kubectl apply -f manifests/frontend/
 
-# Quinto: NGINX (ConfigMap, Deployment y Service)
+# 10. DESPLEGAR NGINX
 kubectl apply -f manifests/nginx/
 
-# 4. Verificar el estado de todos los pods
-kubectl get pods
+# 11. VERIFICAR TODOS LOS PODS
+kubectl get pods -n inventorit
 
-# 5. Verificar los servicios
-kubectl get services
+# 12. VERIFICAR SERVICIOS
+kubectl get svc -n inventorit
 
-# 6. Verificar los deployments
-kubectl get deployments
-
-# 7. Ver logs del backend (si hay problemas)
-kubectl logs -l app=backend
-
-# 8. Ver logs de la base de datos (si hay problemas)
-kubectl logs -l app=postgres
-
-# 9. Acceder a la aplicacion
+# 13. ACCEDER A LA APLICACION
 # Abrir navegador en: http://localhost:8080
 
-# 10. Eliminar todo el despliegue (cuando termines)
-kubectl delete -f manifests/nginx/
-kubectl delete -f manifests/frontend/
-kubectl delete -f manifests/backend/
-kubectl delete -f manifests/db/
-kubectl delete -f manifests/config/
+# ========================================
+# COMANDOS DE VERIFICACION
+# ========================================
 
-# 11. Eliminar el cluster completo
+# Ver logs del backend
+kubectl logs -l app=backend -n inventorit
+
+# Ver logs de postgres
+kubectl logs -l app=postgres -n inventorit
+
+# Ver logs del frontend
+kubectl logs -l app=frontend -n inventorit
+
+# Ver logs de nginx
+kubectl logs -l app=nginx -n inventorit
+
+# Describir un pod especifico
+kubectl describe pod -l app=backend -n inventorit
+
+# ========================================
+# LIMPIEZA
+# ========================================
+
+# Eliminar namespace (elimina todos los recursos)
+kubectl delete namespace inventorit
+
+# Eliminar cluster
 kind delete cluster --name inventorit
+

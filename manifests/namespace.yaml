@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: inventorit
+  labels:
+    name: inventorit
+    app: inventorit
+    environment: exam
