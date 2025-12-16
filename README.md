@@ -1,6 +1,6 @@
-# InventorIT - Despliegue en Kubernetes
+# Examen Final de Security Docker & Kubernetes - Hackademy
 
-Despliegue de la aplicación InventorIT usando Kubernetes con kind para el Examen Final de Seguridad en Docker y Kubernetes.
+Despliegue de la aplicación InventorIT usando Kubernetes con kind.
 
 ## Descripción
 
@@ -251,8 +251,8 @@ Las credenciales están en `manifests/config/postgres-secret.yaml`:
 - Rutas: `/` (frontend), `/api` (backend)
 
 ## Notas
-- Proyecto 100% Kubernetes (sin Docker Compose)
-- Usa imágenes de Docker Hub (no construye nada)
+- Proyecto 100% Kubernetes
+- Usa imágenes de Docker Hub
 - Manifiestos organizados por componente
 - Namespace dedicado
 - Seguridad aplicada según lo visto en clase
