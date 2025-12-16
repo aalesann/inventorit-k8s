@@ -1,0 +1,58 @@
+# Comandos para desplegar InventorIT en Kubernetes con kind
+
+# 1. Crear el cluster de Kubernetes con kind
+kind create cluster --config kind-config.yaml --name inventorit
+
+# 2. Verificar que el cluster este corriendo
+kubectl cluster-info --context kind-inventorit
+
+# 3. Aplicar los manifiestos en orden
+
+# Primero: Configuracion (Secrets y ConfigMaps)
+kubectl apply -f manifests/config/
+
+# Segundo: Base de datos (PVC, Deployment y Service)
+kubectl apply -f manifests/db/
+
+# Esperar a que la base de datos este lista
+kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s
+
+# Tercero: Backend (Deployment y Service)
+kubectl apply -f manifests/backend/
+
+# Esperar a que el backend este listo
+kubectl wait --for=condition=ready pod -l app=backend --timeout=120s
+
+# Cuarto: Frontend (Deployment y Service)
+kubectl apply -f manifests/frontend/
+
+# Quinto: NGINX (ConfigMap, Deployment y Service)
+kubectl apply -f manifests/nginx/
+
+# 4. Verificar el estado de todos los pods
+kubectl get pods
+
+# 5. Verificar los servicios
+kubectl get services
+
+# 6. Verificar los deployments
+kubectl get deployments
+
+# 7. Ver logs del backend (si hay problemas)
+kubectl logs -l app=backend
+
+# 8. Ver logs de la base de datos (si hay problemas)
+kubectl logs -l app=postgres
+
+# 9. Acceder a la aplicacion
+# Abrir navegador en: http://localhost:8080
+
+# 10. Eliminar todo el despliegue (cuando termines)
+kubectl delete -f manifests/nginx/
+kubectl delete -f manifests/frontend/
+kubectl delete -f manifests/backend/
+kubectl delete -f manifests/db/
+kubectl delete -f manifests/config/
+
+# 11. Eliminar el cluster completo
+kind delete cluster --name inventorit
