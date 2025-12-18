@@ -36,8 +36,21 @@ spec:
             secretKeyRef:
               name: postgres-secret
               key: POSTGRES_DB
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
@@ -46,7 +59,7 @@ spec:
             command:
             - pg_isready
             - -U
-            - inventorit_user
+            - postgres
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
@@ -56,7 +69,7 @@ spec:
             command:
             - pg_isready
             - -U
-            - inventorit_user
+            - postgres
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -70,8 +83,6 @@ spec:
             cpu: "500m"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 999
           capabilities:
             drop:
             - ALL

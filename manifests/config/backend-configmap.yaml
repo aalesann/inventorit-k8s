@@ -6,7 +6,7 @@ metadata:
 data:
   NODE_ENV: "production"
   SERVER_IP: "localhost"
-  ALLOWED_ORIGINS: ""
+  ALLOWED_ORIGINS: "*"
   PORT: "3000"
   DB_HOST: "postgres-service"
   DB_PORT: "5432"

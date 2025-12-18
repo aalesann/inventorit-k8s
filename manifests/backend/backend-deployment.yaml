@@ -135,7 +135,7 @@ spec:
           mountPath: /app/logs
         livenessProbe:
           httpGet:
-            path: /
+            path: /health
             port: 3000
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -143,7 +143,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /
+            path: /health
             port: 3000
           initialDelaySeconds: 15
           periodSeconds: 5
